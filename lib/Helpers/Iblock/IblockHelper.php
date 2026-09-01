@@ -115,4 +115,40 @@ class IblockHelper extends BaseHelper
             'order' => ['SORT' => 'ASC']
         ])->fetchAll();
     }
+    
+    /**
+     * Получить значения свойства типа список в формате id => name
+     * 
+     * @param int $iblockId ID инфоблока
+     * @param string $propertyCode Код свойства
+     * @return array Массив значений в формате [id => name]
+     */
+    public static function getPropertyEnumValues($iblockId, $propertyCode)
+    {
+        self::loadIblockModule();
+        
+        $property = \CIBlockProperty::GetList([], [
+            'IBLOCK_ID' => $iblockId,
+            'CODE' => $propertyCode
+        ])->Fetch();
+        
+        if (!$property) {
+            return [];
+        }
+        
+        if ($property['PROPERTY_TYPE'] !== 'L') {
+            return [];
+        }
+        
+        $enumValues = [];
+        $enumList = \CIBlockPropertyEnum::GetList([], [
+            'PROPERTY_ID' => $property['ID']
+        ]);
+        
+        while ($enum = $enumList->Fetch()) {
+            $enumValues[$enum['ID']] = $enum['VALUE'];
+        }
+        
+        return $enumValues;
+    }
 }
