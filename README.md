@@ -228,6 +228,43 @@ ProjectCore::registerAutoload();
 
 Папка `local/modules/project.core/` попадает в git и содержит только проектный код.
 
+### Модификация pink80.core
+
+Если вы хотите внести изменения в сам модуль `pink80.core`:
+
+#### Для временных изменений:
+Используйте `project.core` - создайте дубликат класса с изменённым функционалом.
+
+#### Для постоянных изменений:
+1. Клонируйте репозиторий модуля:
+```bash
+git clone git@github.com:oepink80/pink80-core.git
+cd pink80-core
+```
+
+2. Внесите изменения
+
+3. Увеличьте версию в `composer.json` и `include.php`
+
+4. Запушьте изменения:
+```bash
+git add .
+git commit -m "Описание изменений"
+git push origin master
+git tag v2.0.1
+git push origin master --tags
+```
+
+5. Обновите в проекте:
+```bash
+composer update pink80/core
+```
+
+**Важно:** Проверьте конфликты классов перед обновлением:
+```bash
+php local/modules/pink80.core/bin/conflict-detector.php
+```
+
 ### Ручная установка
 Если composer не используется:
 1. Скопируйте папку `pink80.core` в `local/modules/`
