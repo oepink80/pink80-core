@@ -65,7 +65,41 @@ composer install
 - ✅ Composer зависимости в `local/vendor/`
 - ✅ Autoload настроен
 
-#### Шаг 4: Создать init.php
+#### Шаг 4: Создать project.core
+
+Создайте структуру для проектных изменений:
+
+```bash
+mkdir -p local/modules/project.core/lib
+```
+
+Создайте файл `local/modules/project.core/include.php`:
+
+```php
+<?php
+
+namespace Project\Core;
+
+class ProjectCore extends \Pink80\Core\LocalCore
+{
+    const MODULE_ID = 'project.core';
+    
+    public static function init()
+    {
+        parent::init();
+        self::registerProjectHandlers();
+    }
+    
+    private static function registerProjectHandlers()
+    {
+        // Проект-специфичные обработчики
+    }
+}
+
+ProjectCore::registerAutoload();
+```
+
+#### Шаг 5: Создать init.php
 
 Создайте файл `local/php_interface/init.php`:
 
@@ -86,7 +120,7 @@ if (file_exists($corePath)) {
     }
 }
 
-// Подключение проектного модуля project.core (если создан)
+// Подключение проектного модуля project.core
 $projectPath = $_SERVER['DOCUMENT_ROOT'] . '/local/modules/project.core/include.php';
 if (file_exists($projectPath)) {
     require_once $projectPath;
@@ -369,42 +403,6 @@ php local/modules/pink80.core/bin/conflict-detector.php
 ```
 
 Детектор сканирует оба модуля и предупреждает о наличии дубликатов FQCN.
-
-## Создание project.core
-
-Для проект-специфичных изменений создайте модуль `project.core`:
-
-```bash
-mkdir -p local/modules/project.core/lib
-```
-
-Создайте файл `local/modules/project.core/include.php`:
-
-```php
-<?php
-
-namespace Project\Core;
-
-class ProjectCore extends \Pink80\Core\LocalCore
-{
-    const MODULE_ID = 'project.core';
-    
-    public static function init()
-    {
-        parent::init();
-        self::registerProjectHandlers();
-    }
-    
-    private static function registerProjectHandlers()
-    {
-        // Проект-специфичные обработчики
-    }
-}
-
-ProjectCore::registerAutoload();
-```
-
-Папка `local/modules/project.core/` попадает в git и содержит только проектный код.
 
 ## Модификация pink80.core
 
