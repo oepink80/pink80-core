@@ -1,0 +1,32 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Точка входа для CLI команд модуля pink80.core
+ * 
+ * Использование: php -d mbstring.func_overload=2 bin/console <command> [options] [arguments]
+ */
+
+// Подключение Битрикс
+$_SERVER['DOCUMENT_ROOT'] = dirname(__DIR__, 3);
+$DOCUMENT_ROOT = $_SERVER['DOCUMENT_ROOT'];
+
+define('NO_KEEP_STATISTIC', true);
+define('NOT_CHECK_PERMISSIONS', true);
+define('BX_CRONTAB', true);
+define('BX_NO_ACCELERATOR_RESET', true);
+
+require_once $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_before.php';
+
+// Подключение модуля
+require_once __DIR__ . '/../include.php';
+
+use Pink80\Core\Console\ConsoleApplication;
+
+try {
+    $app = new ConsoleApplication();
+    $app->run();
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage() . "\n";
+    exit(1);
+}

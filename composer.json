@@ -1,0 +1,25 @@
+{
+    "name": "pink80/core",
+    "description": "Local core for simplified Bitrix development. Includes helpers, factories, event handlers and CLI commands.",
+    "type": "bitrix-module",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Pink80",
+            "email": "github@oepink80.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Pink80\\Core\\": "lib/"
+        }
+    },
+    "extra": {
+        "installer-paths": {
+            "local/modules/pink80.core": ["type:bitrix-module"]
+        }
+    }
+}
