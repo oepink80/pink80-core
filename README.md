@@ -403,24 +403,97 @@ php local/modules/pink80.core/bin/conflict-detector.php
 - ✅ Легко отменить
 - ✅ Изолировано от общего модуля
 
-### Вариант 2: Прямое редактирование pink80.core (с ограничениями)
+### Вариант 2: Постоянные изменения в pink80.core (для владельца репозитория)
 
-Можно редактировать файлы напрямую в `local/modules/pink80.core/`:
+Если вы владелец репозитория `pink80-core`, самый простой способ:
 
-**⚠️ ВАЖНО:** При следующем `composer update pink80/core` все изменения будут перезаписаны!
+#### Чек-лист для переноса функционала:
 
-Используйте этот вариант только если:
-- Вы понимаете, что изменения потеряются при обновлении
-- Вы хотите временно протестировать изменение в самом модуле
-- Вы планируете сразу сделать PR в основной репозиторий
+1. **Протестируйте в project.core**
+   - Создайте функционал в `local/modules/project.core/lib/`
+   - Тщательно протестируйте в проекте
+   - Убедитесь, что функционал универсальный
 
-### Вариант 3: Постоянные изменения через Pull Request
+2. **Подготовьте основной репозиторий**
+   ```bash
+   cd C:\temp\pink80-core  # или другая рабочая папка
+   git pull origin master
+   ```
 
-Если функционал универсальный и нужен в других проектах:
+3. **Добавьте функционал в основной модуль**
+   - Откройте соответствующий файл в `lib/`
+   - Добавьте метод/класс (НЕ копируйте файл целиком!)
+   - Измените namespace на `Pink80\Core`
+   - Сохраните файл
+
+4. **Проверьте изменения**
+   ```bash
+   git diff lib/Helpers/Iblock/IblockHelper.php
+   ```
+   Убедитесь, что видите только добавление новых строк (+), без удаления существующих (-).
+
+5. **Commit и push**
+   ```bash
+   git add lib/Helpers/Iblock/IblockHelper.php
+   git commit -m "Add description of changes"
+   git push origin master
+   ```
+
+6. **Обновите версию**
+   - Измените версию в `composer.json` (например, 2.0.2 → 2.0.3)
+   - Commit, push, tag
+
+7. **Обновите модуль в проекте**
+   ```bash
+   cd local
+   composer update pink80/core
+   ```
+
+8. **Удалите дубликаты из project.core**
+   - Удалите перенесённый файл/метод из `local/modules/project.core/`
+   - Проверьте конфликты: `php local/modules/pink80.core/bin/conflict-detector.php`
+   - Commit изменений проекта
+
+#### Пример правильного переноса метода:
+
+**Что нужно перенести (из project.core):**
+```php
+// local/modules/project.core/lib/Helpers/Iblock/IblockHelper.php
+public static function getPropertyEnumValues($iblockId, $propertyCode)
+{
+    // код метода
+}
+```
+
+**Как добавить в основной модуль:**
+```php
+// C:\temp\pink80-core/lib/Helpers/Iblock/IblockHelper.php
+class IblockHelper extends BaseHelper
+{
+    // ... существующие методы ...
+    
+    // Добавить в конец класса, перед закрывающей скобкой
+    public static function getPropertyEnumValues($iblockId, $propertyCode)
+    {
+        // код метода
+    }
+}
+```
+
+**Проверка через git diff:**
+```bash
+git diff lib/Helpers/Iblock/IblockHelper.php
+```
+Должен показывать только добавление новых строк (+), без удаления существующих (-).
+
+### Вариант 3: Постоянные изменения через Pull Request (для контрибьюторов)
+
+Если вы не владелец репозитория и хотите внести вклад:
 
 1. Форкните репозиторий: https://github.com/oepink80/pink80-core/fork
-2. Клонируйте свой форк:
+2. Клонируйте свой форк в любую рабочую папку:
 ```bash
+cd C:\temp
 git clone git@github.com:YOUR_USERNAME/pink80-core.git
 cd pink80-core
 ```
@@ -430,7 +503,7 @@ cd pink80-core
 git checkout -b feature/имя-функционала
 ```
 
-4. Внесите изменения
+4. Внесите изменения (следуя чек-листу из Варианта 2)
 
 5. Запушьте в свой форк:
 ```bash
@@ -446,59 +519,6 @@ git push origin feature/имя-функционала
 cd local
 composer update pink80/core
 ```
-
-### Promotion workflow: Перенос функционала из project.core в pink80.core
-
-Если функционал, разработанный в `project.core`, стал универсальным и нужен в других проектах:
-
-#### Шаг 1: Проверка
-```bash
-# Убедитесь, что код протестирован в проекте
-php local/modules/pink80.core/bin/conflict-detector.php
-```
-
-#### Шаг 2: Форк и клонирование (один раз)
-1. Форкните репозиторий: https://github.com/oepink80/pink80-core/fork
-2. Клонируйте свой форк в любую рабочую папку (например, `C:\temp\` или `~/work/`):
-```bash
-cd C:\temp  # или любая другая рабочая папка
-git clone git@github.com:YOUR_USERNAME/pink80-core.git
-cd pink80-core
-```
-
-#### Шаг 3: Перенос кода
-Скопируйте файлы из `local/modules/project.core/` в соответствующие папки форка
-Измените namespace с `Project\Core` на `Pink80\Core`.
-
-#### Шаг 4: Создание PR
-```bash
-git checkout -b feature/имя-функционала
-git add .
-git commit -m "Add feature: описание функционала"
-git push origin feature/имя-функционала
-```
-
-Создайте Pull Request: https://github.com/oepink80/pink80-core/compare
-
-#### Шаг 5: После слияния PR
-1. Обновите модуль в проекте:
-```bash
-cd local
-composer update pink80/core
-```
-2. Удалите дубликаты из `project.core`
-3. Проверьте конфликты:
-```bash
-php local/modules/pink80.core/bin/conflict-detector.php
-```
-4. Commit изменений в проекте:
-```bash
-git add local/modules/project.core
-git commit -m "Remove duplicated code, now in pink80.core"
-git push
-```
-
-**Важно:** Переносите только универсальные утилиты, хелперы и обработчики. Не переносите проект-специфичный код (business logic).
 
 ## Обновление
 
