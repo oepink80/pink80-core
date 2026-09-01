@@ -65,12 +65,8 @@ function getClassesFromDirectory($dir) {
         if ($file->isFile() && $file->getExtension() === 'php') {
             $content = file_get_contents($file->getPathname());
             
-            // Пропускаем абстрактные классы и интерфейсы
-            if (preg_match('/(abstract\s+class|interface)\s+\w+/', $content)) {
-                continue;
-            }
-            
-            if (preg_match('/namespace\s+([\w\\]+);/', $content, $namespaceMatch) &&
+            // Проверяем на namespace и class
+            if (preg_match('/namespace\s+([\w\\\\]+);/', $content, $namespaceMatch) &&
                 preg_match('/class\s+(\w+)/', $content, $classMatch)) {
                 $classes[] = $namespaceMatch[1] . '\\' . $classMatch[1];
             }
