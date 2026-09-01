@@ -11,16 +11,14 @@
 - Composer (установленный глобально или локально)
 - Битрикс (любая версия с поддержкой D7)
 
-### Установка через Composer (рекомендуемый метод)
+### Шаг 1: Подготовка проекта
 
-Модуль устанавливается через composer **внутри папки local/** для изоляции от основного проекта.
+#### 1.1. Создать composer.json в local/
 
-#### Шаг 1: Перейти в папку local
+Перейдите в папку local:
 ```bash
 cd local
 ```
-
-#### Шаг 2: Создать composer.json в local/
 
 Создайте файл `local/composer.json`:
 
@@ -55,7 +53,7 @@ cd local
 }
 ```
 
-#### Шаг 3: Установить модуль
+#### 1.2. Установить модуль
 ```bash
 composer install
 ```
@@ -65,7 +63,7 @@ composer install
 - ✅ Composer зависимости в `local/vendor/`
 - ✅ Autoload настроен
 
-#### Шаг 4: Создать project.core
+### Шаг 2: Создание project.core
 
 Создайте структуру для проектных изменений:
 
@@ -99,7 +97,7 @@ class ProjectCore extends \Pink80\Core\LocalCore
 ProjectCore::registerAutoload();
 ```
 
-#### Шаг 5: Создать init.php
+### Шаг 3: Создание init.php
 
 Создайте файл `local/php_interface/init.php`:
 
@@ -130,29 +128,7 @@ if (file_exists($projectPath)) {
 }
 ```
 
-#### Обновление
-```bash
-cd local
-composer update pink80/core
-```
-
-### Структура проекта после установки
-
-```
-F:\www\uralgarnet/
-├── local/
-│   ├── composer.json          # Composer конфигурация для модулей
-│   ├── composer.lock
-│   ├── vendor/               # Composer зависимости
-│   ├── modules/
-│   │   ├── pink80.core/     # Установлен через composer
-│   │   └── project.core/    # Проектные изменения (создаётся вручную)
-│   └── php_interface/
-│       └── init.php         # Автозагрузка модулей
-└── bitrix/                  # Битрикс core
-```
-
-### .gitignore
+### Шаг 4: Настройка .gitignore
 
 Добавьте в `.gitignore` проекта:
 
@@ -163,42 +139,20 @@ local/composer.lock
 local/modules/pink80.core/
 ```
 
-## Структура модуля
+### Итоговая структура проекта
 
 ```
-local/modules/pink80.core/
-├── bin/                    # CLI команды
-│   ├── console            # Точка входа для консольных команд
-│   └── conflict-detector.php # Детектор конфликтов классов
-├── handlers/               # Регистрация обработчиков событий
-│   └── EventHandlerRegistrar.php
-├── lib/                    # Основные классы
-│   ├── Console/           # CLI система
-│   │   ├── Commands/      # Консольные команды
-│   │   ├── ConsoleApplication.php
-│   │   ├── CommandRegistry.php
-│   │   └── BaseCommand.php
-│   ├── Factories/         # Фабрики сущностей
-│   │   ├── Iblock/
-│   │   ├── User/
-│   │   ├── Highloadblock/
-│   │   └── Main/
-│   ├── Handlers/          # Обработчики событий
-│   │   ├── Main/
-│   │   ├── Iblock/
-│   │   ├── User/
-│   │   └── Highloadblock/
-│   ├── Helpers/           # Хелперы
-│   │   ├── Iblock/
-│   │   ├── User/
-│   │   ├── String/
-│   │   ├── Array/
-│   │   ├── Date/
-│   │   └── Highloadblock/
-│   └── Interfaces/        # Интерфейсы
-├── composer.json          # Composer конфигурация
-├── README.md              # Документация
-└── include.php            # Основной файл модуля
+F:\www\uralgarnet/
+├── local/
+│   ├── composer.json          # Composer конфигурация для модулей
+│   ├── composer.lock
+│   ├── vendor/               # Composer зависимости
+│   ├── modules/
+│   │   ├── pink80.core/     # Установлен через composer
+│   │   └── project.core/    # Проектные изменения
+│   └── php_interface/
+│       └── init.php         # Автозагрузка модулей
+└── bitrix/                  # Битрикс core
 ```
 
 ## Использование
@@ -370,8 +324,13 @@ php -d mbstring.func_overload=2 local/modules/pink80.core/bin/console <command>
 - `help` - Показать справку по команде
 
 #### Создание собственной команды
+
+Создайте файл в `local/modules/project.core/lib/Console/Commands/MyCommand.php`:
+
 ```php
-namespace Pink80\Core\Console\Commands;
+<?php
+
+namespace Project\Core\Console\Commands;
 
 use Pink80\Core\Console\BaseCommand;
 
@@ -394,7 +353,16 @@ class MyCommand extends BaseCommand
 }
 ```
 
-## Конфликт detector
+Зарегистрируйте команду в `project.core/include.php`:
+
+```php
+private static function registerProjectHandlers()
+{
+    \Pink80\Core\Console\CommandRegistry::register('Project\Core\Console\Commands\MyCommand');
+}
+```
+
+### Конфликт detector
 
 Для проверки дубликатов классов между `pink80.core` и `project.core`:
 
@@ -404,30 +372,80 @@ php local/modules/pink80.core/bin/conflict-detector.php
 
 Детектор сканирует оба модуля и предупреждает о наличии дубликатов FQCN.
 
-## Модификация pink80.core
+## Модификация модуля
 
-Если вы хотите внести изменения в сам модуль `pink80.core`:
+### Структура модуля
 
-#### Для временных изменений:
-Используйте `project.core` - создайте дубликат класса с изменённым функционалом.
+```
+local/modules/pink80.core/
+├── bin/                    # CLI команды
+│   ├── console            # Точка входа для консольных команд
+│   └── conflict-detector.php # Детектор конфликтов классов
+├── handlers/               # Регистрация обработчиков событий
+│   └── EventHandlerRegistrar.php
+├── lib/                    # Основные классы
+│   ├── Console/           # CLI система
+│   │   ├── Commands/      # Консольные команды
+│   │   ├── ConsoleApplication.php
+│   │   ├── CommandRegistry.php
+│   │   └── BaseCommand.php
+│   ├── Factories/         # Фабрики сущностей
+│   │   ├── Iblock/
+│   │   ├── User/
+│   │   ├── Highloadblock/
+│   │   └── Main/
+│   ├── Handlers/          # Обработчики событий
+│   │   ├── Main/
+│   │   ├── Iblock/
+│   │   ├── User/
+│   │   └── Highloadblock/
+│   ├── Helpers/           # Хелперы
+│   │   ├── Iblock/
+│   │   ├── User/
+│   │   ├── String/
+│   │   ├── Array/
+│   │   ├── Date/
+│   │   └── Highloadblock/
+│   └── Interfaces/        # Интерфейсы
+├── composer.json          # Composer конфигурация
+├── README.md              # Документация
+└── include.php            # Основной файл модуля
+```
 
-#### Для постоянных изменений:
+### Добавление новой функциональности
+
+#### Вариант 1: Временные изменения (рекомендуется)
+Используйте `project.core` для быстрых изменений:
+- Создайте класс в `local/modules/project.core/lib/`
+- Протестируйте в проекте
+- Если функционал универсальный → перенесите в pink80.core (см. ниже)
+
+#### Вариант 2: Постоянные изменения в pink80.core
+
+Для постоянных изменений в основном модуле:
+
 1. Клонируйте репозиторий модуля:
 ```bash
+cd /path/to/work/
 git clone git@github.com:oepink80/pink80-core.git
 cd pink80-core
 ```
 
-2. Внесите изменения
+2. Внесите изменения (добавьте хелпер, фабрику и т.д.)
 
-3. Увеличьте версию в `composer.json`
+3. Увеличьте версию в `composer.json`:
+```json
+{
+    "version": "2.1.0"
+}
+```
 
 4. Запушьте изменения:
 ```bash
 git add .
-git commit -m "Описание изменений"
+git commit -m "Add feature: описание изменений"
 git push origin master
-git tag v2.0.1
+git tag v2.1.0
 git push origin master --tags
 ```
 
@@ -437,12 +455,12 @@ cd local
 composer update pink80/core
 ```
 
-**Важно:** Проверьте конфликты классов перед обновлением:
+6. Проверьте конфликты:
 ```bash
 php local/modules/pink80.core/bin/conflict-detector.php
 ```
 
-## Promotion workflow: Перенос функционала из project.core в pink80.core
+### Promotion workflow: Перенос функционала из project.core в pink80.core
 
 Если функционал, разработанный в `project.core`, стал универсальным и нужен в других проектах:
 
@@ -498,6 +516,20 @@ git push
 ```
 
 **Важно:** Не переносите проект-специфичный код (business logic) в общий модуль. Переносите только универсальные утилиты, хелперы и обработчики.
+
+## Обновление
+
+Для обновления модуля до новой версии:
+
+```bash
+cd local
+composer update pink80/core
+```
+
+После обновления проверьте конфликты:
+```bash
+php local/modules/pink80.core/bin/conflict-detector.php
+```
 
 ## Требования и лицензия
 
