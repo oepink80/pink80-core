@@ -12,7 +12,7 @@
 - Битрикс (любая версия с поддержкой D7)
 
 ### Установка через Composer
-Модуль распространяется исключительно через composer для легкого обновления и переиспользования в разных проектах.
+Модуль опубликован в Packagist для максимально простой установки.
 
 #### Шаг 1: Создание composer.json (если не существует)
 
@@ -46,12 +46,6 @@ sudo mv composer.phar /usr/local/bin/composer
         "php": ">=7.4",
         "pink80/core": "^2.0"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "git@github.com:oepink80/pink80-core.git"
-        }
-    ],
     "autoload": {
         "psr-4": {
             "Pink80\\Core\\": "local/modules/pink80.core/lib/",
@@ -165,6 +159,16 @@ php local/modules/pink80.core/bin/conflict-detector.php
 
 #### 5. Если существует project.core
 Убедитесь, что нет дубликатов классов между `pink80.core` и `project.core`.
+
+### Быстрая установка
+
+Если composer.json уже существует, просто добавьте зависимость:
+
+```bash
+composer require pink80/core
+```
+
+Модуль автоматически установится в `local/modules/pink80.core/` через composer/installers.
 
 ### Ручная установка
 Если composer не используется:
