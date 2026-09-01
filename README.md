@@ -11,36 +11,23 @@
 - Composer (установленный глобально или локально)
 - Битрикс (любая версия с поддержкой D7)
 
-### Установка через Composer
-Модуль опубликован в Packagist для максимально простой установки.
+### Установка через Composer (рекомендуемый метод)
 
-#### Шаг 1: Создание composer.json (если не существует)
+Модуль устанавливается через composer **внутри папки local/** для изоляции от основного проекта.
 
-Для чистого проекта без composer.json:
-
+#### Шаг 1: Перейти в папку local
 ```bash
-cd /path/to/your/bitrix/project
-composer init
+cd local
 ```
 
-Если composer не установлен, установите его:
-```bash
-# Windows
-php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-php composer-setup.php
-php composer.phar
+#### Шаг 2: Создать composer.json в local/
 
-# Linux/Mac
-curl -sS https://getcomposer.org/installer | php
-sudo mv composer.phar /usr/local/bin/composer
-```
-
-Затем отредактируйте созданный composer.json:
+Создайте файл `local/composer.json`:
 
 ```json
 {
-    "name": "your-company/your-project",
-    "description": "Your Bitrix project",
+    "name": "your-company/local",
+    "description": "Local modules for Bitrix project",
     "type": "project",
     "require": {
         "php": ">=7.4",
@@ -48,21 +35,19 @@ sudo mv composer.phar /usr/local/bin/composer
     },
     "autoload": {
         "psr-4": {
-            "Pink80\\Core\\": "local/modules/pink80.core/lib/",
-            "Project\\Core\\": "local/modules/project.core/lib/"
+            "Pink80\\Core\\": "pink80.core/lib/",
+            "Project\\Core\\": "project.core/lib/"
         }
     },
     "extra": {
         "installer-paths": {
-            "local/modules/pink80.core": ["type:bitrix-module"]
+            "modules/pink80.core": ["type:bitrix-module"]
         }
     },
     "require-dev": {
         "composer/installers": "^2.0"
     },
     "config": {
-        "optimize-autoloader": true,
-        "classmap-authoritative": false,
         "allow-plugins": {
             "composer/installers": true
         }
@@ -70,21 +55,17 @@ sudo mv composer.phar /usr/local/bin/composer
 }
 ```
 
-**Обратите внимание:** Секции `extra`, `require-dev` и `config` обязательны для правильной установки модуля в `local/modules/pink80.core/` через composer/installers.
-
-#### Шаг 2: Установка модуля
+#### Шаг 3: Установить модуль
 ```bash
-composer require pink80/core
+composer install
 ```
 
-При установке автоматически:
-1. Модуль устанавливается напрямую в `local/modules/pink80.core`
-2. Настраивается автозагрузка через composer
-3. Модуль готов к использованию
+Результат:
+- ✅ Модуль установится в `local/modules/pink80.core/`
+- ✅ Composer зависимости в `local/vendor/`
+- ✅ Autoload настроен
 
-#### Шаг 3: Создание init.php (если не существует)
-
-Для чистого проекта без `local/php_interface/init.php`:
+#### Шаг 4: Создать init.php
 
 Создайте файл `local/php_interface/init.php`:
 
