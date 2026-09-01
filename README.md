@@ -96,238 +96,37 @@ if (file_exists($projectPath)) {
 }
 ```
 
-**Важно для существующих проектов:**
-- Если папка `local/modules/pink80.core` уже существует → composer перезапишет её
-- Если файл `local/php_interface/init.php` уже существует → нужно добавить загрузку модуля вручную
-- Рекомендуется проверить существующий `init.php` и добавить загрузку модуля
-
-#### Обновление:
+#### Обновление
 ```bash
+cd local
 composer update pink80/core
 ```
 
-### Установка в существующий проект
+### Структура проекта после установки
 
-Если проект уже имеет структуру `local/` и файл `init.php`:
-
-#### 1. Проверьте существующий init.php
-```bash
-# Проверьте, существует ли файл
-cat local/php_interface/init.php
+```
+F:\www\uralgarnet/
+├── local/
+│   ├── composer.json          # Composer конфигурация для модулей
+│   ├── composer.lock
+│   ├── vendor/               # Composer зависимости
+│   ├── modules/
+│   │   ├── pink80.core/     # Установлен через composer
+│   │   └── project.core/    # Проектные изменения (создаётся вручную)
+│   └── php_interface/
+│       └── init.php         # Автозагрузка модулей
+└── bitrix/                  # Битрикс core
 ```
 
-#### 2. Добавьте загрузку модуля
-Вставьте этот код в начало или конец существующего `local/php_interface/init.php`:
+### .gitignore
 
-```php
-// Pink80 Core Module
-$corePath = $_SERVER['DOCUMENT_ROOT'] . '/local/modules/pink80.core/include.php';
-if (file_exists($corePath)) {
-    require_once $corePath;
-    if (class_exists('Pink80\Core\LocalCore')) {
-        \Pink80\Core\LocalCore::init();
-    }
-}
-```
+Добавьте в `.gitignore` проекта:
 
-#### 3. Установите модуль через composer
-```bash
-composer require pink80/core
-```
-
-#### 4. Проверьте конфликты
-```bash
-php local/modules/pink80.core/bin/conflict-detector.php
-```
-
-#### 5. Если существует project.core
-Убедитесь, что нет дубликатов классов между `pink80.core` и `project.core`.
-
-### Быстрая установка
-
-Если composer.json уже существует, просто добавьте зависимость:
-
-```bash
-composer require pink80/core
-```
-
-Модуль автоматически установится в `local/modules/pink80.core/` через composer/installers.
-
-**Важно:** Для работы installer-paths composer.json проекта должен содержать:
-
-```json
-{
-    "extra": {
-        "installer-paths": {
-            "local/modules/pink80.core": ["type:bitrix-module"]
-        }
-    },
-    "require-dev": {
-        "composer/installers": "^2.0"
-    },
-    "config": {
-        "allow-plugins": {
-            "composer/installers": true
-        }
-    }
-}
-```
-
-### Создание project.core
-
-Для проект-специфичных изменений создайте модуль `project.core`:
-
-```bash
-mkdir -p local/modules/project.core/lib
-```
-
-Создайте файл `local/modules/project.core/include.php`:
-
-```php
-<?php
-
-namespace Project\Core;
-
-class ProjectCore extends \Pink80\Core\LocalCore
-{
-    const MODULE_ID = 'project.core';
-    
-    public static function init()
-    {
-        parent::init();
-        self::registerProjectHandlers();
-    }
-    
-    private static function registerProjectHandlers()
-    {
-        // Проект-специфичные обработчики
-    }
-}
-
-ProjectCore::registerAutoload();
-```
-
-Папка `local/modules/project.core/` попадает в git и содержит только проектный код.
-
-### Модификация pink80.core
-
-Если вы хотите внести изменения в сам модуль `pink80.core`:
-
-#### Для временных изменений:
-Используйте `project.core` - создайте дубликат класса с изменённым функционалом.
-
-#### Для постоянных изменений:
-1. Клонируйте репозиторий модуля:
-```bash
-git clone git@github.com:oepink80/pink80-core.git
-cd pink80-core
-```
-
-2. Внесите изменения
-
-3. Увеличьте версию в `composer.json` и `include.php`
-
-4. Запушьте изменения:
-```bash
-git add .
-git commit -m "Описание изменений"
-git push origin master
-git tag v2.0.1
-git push origin master --tags
-```
-
-5. Обновите в проекте:
-```bash
-composer update pink80/core
-```
-
-**Важно:** Проверьте конфликты классов перед обновлением:
-```bash
-php local/modules/pink80.core/bin/conflict-detector.php
-```
-
-### Promotion workflow: Перенос функционала из project.core в pink80.core
-
-Если функционал, разработанный в `project.core`, стал универсальным и нужен в других проектах:
-
-#### Шаг 1: Подготовка к переносу
-```bash
-# Убедитесь, что код протестирован в проекте
-php local/modules/pink80.core/bin/conflict-detector.php
-```
-
-#### Шаг 2: Клонирование основного репозитория
-```bash
-cd /path/to/work/
-git clone git@github.com:oepink80/pink80-core.git
-cd pink80-core
-```
-
-#### Шаг 3: Создание ветки для изменений
-```bash
-git checkout -b feature/имя-функционала
-```
-
-#### Шаг 4: Перенос кода
-Скопируйте файлы из `local/modules/project.core/` в соответствующие папки `pink80.core/`:
-- `project.core/lib/Helpers/MyHelper.php` → `pink80.core/lib/Helpers/MyHelper.php`
-- `project.core/lib/Handlers/MyHandler.php` → `pink80.core/lib/Handlers/MyHandler.php`
-
-Измените namespace с `Project\Core` на `Pink80\Core`.
-
-#### Шаг 5: Тестирование изменений
-```bash
-# Внесите изменения в composer.json тестового проекта
-composer update pink80/core
-# Протестируйте функционал
-```
-
-#### Шаг 6: Создание Pull Request
-```bash
-git add .
-git commit -m "Add feature: описание функционала"
-git push origin feature/имя-функционала
-```
-
-Создайте Pull Request на GitHub: https://github.com/oepink80/pink80-core/compare
-
-#### Шаг 7: После слияния PR
-1. Обновите версию в основном репозитории
-2. Обновите проект: `composer update pink80/core`
-3. Удалите дубликаты из `project.core`
-4. Проверьте конфликты: `php local/modules/pink80.core/bin/conflict-detector.php`
-
-#### Шаг 8: Commit изменений в проекте
-```bash
-git add local/modules/project.core
-git commit -m "Remove duplicated code, now in pink80.core"
-git push
-```
-
-**Важно:** Не переносите проект-специфичный код (business logic) в общий модуль. Переносите только универсальные утилиты, хелперы и обработчики.
-
-### Ручная установка
-Если composer не используется:
-1. Скопируйте папку `pink80.core` в `local/modules/`
-2. Настройте автозагрузку:
-
-**Если файл `local/php_interface/init.php` уже существует:**
-```php
-// Добавьте в начало или конец существующего файла
-require_once $_SERVER['DOCUMENT_ROOT'] . '/local/modules/pink80.core/include.php';
-if (class_exists('Pink80\Core\LocalCore')) {
-    \Pink80\Core\LocalCore::init();
-}
-```
-
-**Если файл `local/php_interface/init.php` не существует:**
-Создайте файл `local/php_interface/init.php`:
-```php
-<?php
-require_once $_SERVER['DOCUMENT_ROOT'] . '/local/modules/pink80.core/include.php';
-if (class_exists('Pink80\Core\LocalCore')) {
-    \Pink80\Core\LocalCore::init();
-}
+```gitignore
+bitrix/
+local/vendor/
+local/composer.lock
+local/modules/pink80.core/
 ```
 
 ## Структура модуля
@@ -458,61 +257,6 @@ $merged = ArrayHelper::merge($array1, $array2);
 if (ArrayHelper::has($array, 'key')) {
     // Ключ существует
 }
-
-// Переиндексация массива
-$indexed = ArrayHelper::indexBy($array, 'id');
-
-// Получить только определенные ключи
-$filtered = ArrayHelper::only($array, ['id', 'name']);
-
-// Исключить ключи
-$filtered = ArrayHelper::except($array, ['password']);
-```
-
-#### Хелперы для дат
-```php
-use Pink80\Core\Helpers\Date\DateHelper;
-
-// Получить текущую дату
-$now = DateHelper::now();
-
-// Форматирование в формат Битрикс
-$bitrixDate = DateHelper::toBitrixFormat();
-
-// Получить начало дня
-$startOfDay = DateHelper::startOfDay();
-
-// Получить конец дня
-$endOfDay = DateHelper::endOfDay();
-
-// Получить начало месяца
-$startOfMonth = DateHelper::startOfMonth();
-
-// Получить конец месяца
-$endOfMonth = DateHelper::endOfMonth();
-
-// Человеческое различие дат
-$diff = DateHelper::humanDiff($timestamp);
-```
-
-#### Хелперы для HL блоков
-```php
-use Pink80\Core\Helpers\Highloadblock\HighloadblockHelper;
-
-// Получить HL блок по названию
-$hlblock = HighloadblockHelper::getByName('MyHLBlock');
-
-// Получить сущность данных HL блока
-$dataClass = HighloadblockHelper::getEntityDataClassByName('MyHLBlock');
-
-// Получить записи из HL блока
-$result = HighloadblockHelper::getDataList($hlblockId, [
-    'filter' => ['UF_ACTIVE' => 1],
-    'order' => ['UF_ID' => 'ASC']
-]);
-
-// Получить запись по ID
-$record = HighloadblockHelper::getDataById($hlblockId, 1);
 ```
 
 ### Фабрики (Factories)
@@ -521,260 +265,245 @@ $record = HighloadblockHelper::getDataById($hlblockId, 1);
 ```php
 use Pink80\Core\Factories\Iblock\IblockFactory;
 
-// Создать новый инфоблок
+// Создать инфоблок
 $iblock = IblockFactory::createIblock([
-    'NAME' => 'Каталог',
-    'CODE' => 'catalog',
-    'IBLOCK_TYPE_ID' => 'catalog',
-    'LID' => 's1'
+    'NAME' => 'Продукты',
+    'CODE' => 'products',
+    'IBLOCK_TYPE_ID' => 'catalog'
 ]);
 
-// Создать элемент инфоблока
+// Создать элемент
 $element = IblockFactory::createElement($iblockId, [
     'NAME' => 'Товар 1',
-    'ACTIVE' => 'Y',
-    'CODE' => 'product-1'
+    'ACTIVE' => 'Y'
 ]);
 
 // Получить инфоблок по коду
-$iblock = IblockFactory::getByCode('catalog');
+$iblock = IblockFactory::getByCode('products');
 ```
 
 #### Фабрика для пользователей
 ```php
 use Pink80\Core\Factories\User\UserFactory;
 
-// Создать нового пользователя
+// Создать пользователя
 $user = UserFactory::createUser([
-    'LOGIN' => 'newuser',
-    'EMAIL' => 'newuser@example.com',
-    'PASSWORD' => 'password123',
-    'NAME' => 'Иван',
-    'LAST_NAME' => 'Иванов'
+    'LOGIN' => 'testuser',
+    'EMAIL' => 'test@example.com',
+    'PASSWORD' => 'password123'
 ]);
 
 // Получить пользователя по логину
-$user = UserFactory::getByLogin('newuser');
-
-// Получить администраторов
-$admins = UserFactory::getAdmins();
+$user = UserFactory::getByLogin('testuser');
 ```
 
-#### Фабрика для HL блоков
-```php
-use Pink80\Core\Factories\Highloadblock\HighloadblockFactory;
+### Обработчики событий (Event Handlers)
 
-// Создать новый HL блок
-$hlblock = HighloadblockFactory::createHighloadblock([
-    'NAME' => 'MyHLBlock',
-    'TABLE_NAME' => 'my_hl_block'
-]);
-
-// Добавить запись в HL блок
-$recordId = HighloadblockFactory::addData($hlblockId, [
-    'UF_NAME' => 'Запись 1',
-    'UF_ACTIVE' => 1
-]);
-
-// Обновить запись в HL блоке
-HighloadblockFactory::updateData($hlblockId, $recordId, [
-    'UF_NAME' => 'Обновленная запись'
-]);
-
-// Удалить запись из HL блока
-HighloadblockFactory::deleteData($hlblockId, $recordId);
-
-// Получить записи из HL блока
-$result = HighloadblockFactory::getDataList($hlblockId, [
-    'filter' => ['UF_ACTIVE' => 1]
-]);
-```
-
-### Обработчики событий (EventHandlers)
-
-Обработчики событий регистрируются автоматически при инициализации модуля. Для добавления новой логики редактируйте соответствующие файлы в `lib/Handlers/`:
+Модуль автоматически регистрирует следующие обработчики:
 
 #### Основные события
-```php
-// lib/Handlers/Main/MainHandler.php
-class MainHandler extends BaseHandler
-{
-    public static function onBeforeProlog()
-    {
-        // Логика перед прологом
-    }
-}
-```
+- OnBeforeProlog
+- OnProlog
+- OnAfterProlog
+- OnPageStart
+- OnEpilog
 
 #### События инфоблоков
-```php
-// lib/Handlers/Iblock/IblockHandler.php
-class IblockHandler extends BaseHandler
-{
-    public static function onAfterElementAdd(&$fields)
-    {
-        // Логика после добавления элемента
-    }
-}
-```
+- OnAfterIBlockElementAdd
+- OnAfterIBlockElementUpdate
+- OnAfterIBlockElementDelete
+- OnBeforeIBlockElementAdd
+- OnBeforeIBlockElementUpdate
 
 #### События пользователей
-```php
-// lib/Handlers/User/UserHandler.php
-class UserHandler extends BaseHandler
-{
-    public static function onAfterUserAdd(&$fields)
-    {
-        // Логика после добавления пользователя
-    }
-}
-```
+- OnAfterUserAdd
+- OnAfterUserUpdate
+- OnAfterUserDelete
+- OnBeforeUserAdd
+- OnBeforeUserUpdate
+- OnUserLogin
+- OnUserLogout
 
 ### CLI команды
 
-#### Использование консоли
+#### Запуск консольных команд
 ```bash
-# Показать список всех команд
-php -d mbstring.func_overload=2 local/modules/pink80.core/bin/console list
-
-# Показать справку по команде
-php -d mbstring.func_overload=2 local/modules/pink80.core/bin/console help <command>
-
-# Выполнить команду
-php -d mbstring.func_overload=2 local/modules/pink80.core/bin/console <command> [options] [arguments]
+php -d mbstring.func_overload=2 local/modules/pink80.core/bin/console <command>
 ```
 
+#### Доступные команды
+- `list` - Показать список всех команд
+- `help` - Показать справку по команде
+
 #### Создание собственной команды
-
-1. Создайте файл в `lib/Console/Commands/`:
 ```php
-<?php
-
 namespace Pink80\Core\Console\Commands;
 
 use Pink80\Core\Console\BaseCommand;
 
-class MyCustomCommand extends BaseCommand
+class MyCommand extends BaseCommand
 {
     public static function getName()
     {
-        return 'my:custom';
+        return 'my-command';
     }
     
     public static function getDescription()
     {
-        return 'Моя кастомная команда';
-    }
-    
-    public static function getArguments()
-    {
-        return [
-            [
-                'name' => 'argument1',
-                'description' => 'Первый аргумент',
-                'required' => true
-            ]
-        ];
-    }
-    
-    public static function getOptions()
-    {
-        return [
-            [
-                'name' => 'verbose',
-                'description' => 'Подробный вывод'
-            ]
-        ];
+        return 'Моя команда';
     }
     
     public function execute(array $args = [], array $options = [])
     {
-        $this->output('Выполнение команды...');
-        
-        $arg1 = $this->getArgument('argument1', $args);
-        $verbose = $this->hasOption('verbose', $options);
-        
-        if ($verbose) {
-            $this->info('Аргумент: ' . $arg1);
-        }
-        
-        $this->success('Команда выполнена успешно!');
+        $this->output('Hello from my command!');
     }
 }
 ```
 
-2. Команда автоматически зарегистрируется и будет доступна через консоль.
+## Конфликт detector
 
-## Правила разработки
-
-- **ВСЕГДА** использовать современный подход D7 и ORM, если это возможно
-- Использовать устаревшие методы только если нет аналогов в D7
-- Приоритет использования:
-  1. D7 ORM (Bitrix\Main\*)
-  2. Новые API D7
-  3. Устаревшие методы (только при отсутствии альтернатив)
-
-## Проект-специфичные изменения
-
-Для проект-специфичных изменений используйте модуль `project.core`:
-
-```
-local/modules/
-├── pink80.core/          # Основной модуль (устанавливается через composer)
-└── project.core/         # Проектные изменения (локальный код)
-```
-
-### Структура project.core:
-```
-local/modules/project.core/
-├── lib/
-│   ├── Helpers/       # Проектные хелперы
-│   ├── Factories/     # Проектные фабрики
-│   ├── Handlers/      # Проектные обработчики
-│   └── Console/       # Проектные CLI команды
-└── include.php        # Файл инициализации
-```
-
-### Правила для project.core:
-1. **Никогда не создавайте классы с теми же именами, что в pink80.core**
-2. **Перед созданием нового класса проверьте его наличие в основном модуле**
-3. **Если создали полезный класс → рассмотрите мердж в основной модуль**
-4. **Для временных решений используйте пространство имен Temp**
-
-## Система конфликтов
-
-Для проверки дубликатов классов между pink80.core и project.core используйте детектор конфликтов:
+Для проверки дубликатов классов между `pink80.core` и `project.core`:
 
 ```bash
 php local/modules/pink80.core/bin/conflict-detector.php
 ```
 
-Скрипт проверяет наличие дубликатов FQCN (Fully Qualified Class Names) в обоих модулях и выводит отчет о конфликтах.
+Детектор сканирует оба модуля и предупреждает о наличии дубликатов FQCN.
 
-### Как работает:
-1. Сканирует `local/modules/pink80.core/lib/`
-2. Сканирует `local/modules/project.core/lib/`
-3. Извлекает namespace и class name из PHP файлов
-4. Сравнивает FQCN и находит дубликаты
-5. Выводит список конфликтующих файлов
+## Создание project.core
 
-### Разрешение конфликтов:
-Если обнаружены дубликаты:
-1. Удалите дубликаты из `local/modules/project.core/`
-2. Если функция полезна → мерджите её в основной модуль
-3. Обновите версию основного модуля
-4. Повторите установку через composer
+Для проект-специфичных изменений создайте модуль `project.core`:
 
-## Требования
+```bash
+mkdir -p local/modules/project.core/lib
+```
+
+Создайте файл `local/modules/project.core/include.php`:
+
+```php
+<?php
+
+namespace Project\Core;
+
+class ProjectCore extends \Pink80\Core\LocalCore
+{
+    const MODULE_ID = 'project.core';
+    
+    public static function init()
+    {
+        parent::init();
+        self::registerProjectHandlers();
+    }
+    
+    private static function registerProjectHandlers()
+    {
+        // Проект-специфичные обработчики
+    }
+}
+
+ProjectCore::registerAutoload();
+```
+
+Папка `local/modules/project.core/` попадает в git и содержит только проектный код.
+
+## Модификация pink80.core
+
+Если вы хотите внести изменения в сам модуль `pink80.core`:
+
+#### Для временных изменений:
+Используйте `project.core` - создайте дубликат класса с изменённым функционалом.
+
+#### Для постоянных изменений:
+1. Клонируйте репозиторий модуля:
+```bash
+git clone git@github.com:oepink80/pink80-core.git
+cd pink80-core
+```
+
+2. Внесите изменения
+
+3. Увеличьте версию в `composer.json`
+
+4. Запушьте изменения:
+```bash
+git add .
+git commit -m "Описание изменений"
+git push origin master
+git tag v2.0.1
+git push origin master --tags
+```
+
+5. Обновите в проекте:
+```bash
+cd local
+composer update pink80/core
+```
+
+**Важно:** Проверьте конфликты классов перед обновлением:
+```bash
+php local/modules/pink80.core/bin/conflict-detector.php
+```
+
+## Promotion workflow: Перенос функционала из project.core в pink80.core
+
+Если функционал, разработанный в `project.core`, стал универсальным и нужен в других проектах:
+
+#### Шаг 1: Подготовка к переносу
+```bash
+# Убедитесь, что код протестирован в проекте
+php local/modules/pink80.core/bin/conflict-detector.php
+```
+
+#### Шаг 2: Клонирование основного репозитория
+```bash
+cd /path/to/work/
+git clone git@github.com:oepink80/pink80-core.git
+cd pink80-core
+```
+
+#### Шаг 3: Создание ветки для изменений
+```bash
+git checkout -b feature/имя-функционала
+```
+
+#### Шаг 4: Перенос кода
+Скопируйте файлы из `local/modules/project.core/` в соответствующие папки `pink80.core/`
+Измените namespace с `Project\Core` на `Pink80\Core`.
+
+#### Шаг 5: Тестирование изменений
+```bash
+cd local
+composer update pink80/core
+# Протестируйте функционал
+```
+
+#### Шаг 6: Создание Pull Request
+```bash
+git add .
+git commit -m "Add feature: описание функционала"
+git push origin feature/имя-функционала
+```
+
+Создайте Pull Request на GitHub: https://github.com/oepink80/pink80-core/compare
+
+#### Шаг 7: После слияния PR
+1. Обновите версию в основном репозитории
+2. Обновите проект: `cd local && composer update pink80/core`
+3. Удалите дубликаты из `project.core`
+4. Проверьте конфликты: `php local/modules/pink80.core/bin/conflict-detector.php`
+
+#### Шаг 8: Commit изменений в проекте
+```bash
+git add local/modules/project.core
+git commit -m "Remove duplicated code, now in pink80.core"
+git push
+```
+
+**Важно:** Не переносите проект-специфичный код (business logic) в общий модуль. Переносите только универсальные утилиты, хелперы и обработчики.
+
+## Требования и лицензия
 
 - PHP >= 7.4
-- Битрикс (любая версия с поддержкой D7)
-- Composer (для автозагрузки)
-
-## Лицензия
-
-MIT
-
-## Поддержка
-
-GitHub: https://github.com/oepink80/uralgarnet
+- Composer
+- Битрикс с поддержкой D7
+- MIT License
