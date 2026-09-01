@@ -70,6 +70,8 @@ sudo mv composer.phar /usr/local/bin/composer
 }
 ```
 
+**Обратите внимание:** Секции `extra`, `require-dev` и `config` обязательны для правильной установки модуля в `local/modules/pink80.core/` через composer/installers.
+
 #### Шаг 2: Установка модуля
 ```bash
 composer require pink80/core
@@ -169,6 +171,26 @@ composer require pink80/core
 ```
 
 Модуль автоматически установится в `local/modules/pink80.core/` через composer/installers.
+
+**Важно:** Для работы installer-paths composer.json проекта должен содержать:
+
+```json
+{
+    "extra": {
+        "installer-paths": {
+            "local/modules/pink80.core": ["type:bitrix-module"]
+        }
+    },
+    "require-dev": {
+        "composer/installers": "^2.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true
+        }
+    }
+}
+```
 
 ### Ручная установка
 Если composer не используется:
