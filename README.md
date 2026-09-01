@@ -19,11 +19,18 @@
             "url": "git@github.com:oepink80/pink80-core.git"
         }
     ],
-    "scripts": {
-        "post-update-cmd": [
-            "php scripts/copy-module.php",
-            "php local/modules/pink80.core/bin/conflict-detector.php"
-        ]
+    "extra": {
+        "installer-paths": {
+            "local/modules/pink80.core": ["type:bitrix-module"]
+        }
+    },
+    "require-dev": {
+        "composer/installers": "^2.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true
+        }
     }
 }
 ```
@@ -34,10 +41,9 @@ composer require pink80/core
 ```
 
 При установке автоматически:
-1. Модуль загружается в `vendor/pink80/core`
-2. Копируется в `local/modules/pink80.core`
-3. Проверяются конфликты с project.core
-4. Запускается автозагрузка
+1. Модуль устанавливается напрямую в `local/modules/pink80.core`
+2. Настраивается автозагрузка через composer
+3. Модуль готов к использованию
 
 #### Обновление:
 ```bash
@@ -477,19 +483,27 @@ local/modules/project.core/
 
 ## Система конфликтов
 
-При обновлении pink80.core автоматически запускается детектор конфликтов для проверки дубликатов классов между pink80.core и project.core.
+Для проверки дубликатов классов между pink80.core и project.core используйте детектор конфликтов:
+
+```bash
+php local/modules/pink80.core/bin/conflict-detector.php
+```
+
+Скрипт проверяет наличие дубликатов FQCN (Fully Qualified Class Names) в обоих модулях и выводит отчет о конфликтах.
 
 ### Как работает:
-1. При `composer update pink80/core` скрипт проверяет наличие дубликатов
-2. Если обнаружены конфликты → выводится сообщение об ошибке
-3. Если конфликтов нет → обновление проходит успешно
+1. Сканирует `local/modules/pink80.core/lib/`
+2. Сканирует `local/modules/project.core/lib/`
+3. Извлекает namespace и class name из PHP файлов
+4. Сравнивает FQCN и находит дубликаты
+5. Выводит список конфликтующих файлов
 
 ### Разрешение конфликтов:
 Если обнаружены дубликаты:
 1. Удалите дубликаты из `local/modules/project.core/`
 2. Если функция полезна → мерджите её в основной модуль
 3. Обновите версию основного модуля
-4. Повторите `composer update pink80/core`
+4. Повторите установку через composer
 
 ## Требования
 
