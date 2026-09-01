@@ -434,58 +434,53 @@ composer update pink80/core
 
 Если функционал, разработанный в `project.core`, стал универсальным и нужен в других проектах:
 
-#### Шаг 1: Подготовка к переносу
+#### Шаг 1: Проверка
 ```bash
 # Убедитесь, что код протестирован в проекте
 php local/modules/pink80.core/bin/conflict-detector.php
 ```
 
-#### Шаг 2: Клонирование основного репозитория
+#### Шаг 2: Форк и клонирование (один раз)
+1. Форкните репозиторий: https://github.com/oepink80/pink80-core/fork
+2. Клонируйте свой форк:
 ```bash
-cd /path/to/work/
-git clone git@github.com:oepink80/pink80-core.git
+git clone git@github.com:YOUR_USERNAME/pink80-core.git
 cd pink80-core
 ```
 
-#### Шаг 3: Создание ветки для изменений
-```bash
-git checkout -b feature/имя-функционала
-```
-
-#### Шаг 4: Перенос кода
-Скопируйте файлы из `local/modules/project.core/` в соответствующие папки `pink80.core/`
+#### Шаг 3: Перенос кода
+Скопируйте файлы из `local/modules/project.core/` в соответствующие папки форка
 Измените namespace с `Project\Core` на `Pink80\Core`.
 
-#### Шаг 5: Тестирование изменений
+#### Шаг 4: Создание PR
 ```bash
-cd local
-composer update pink80/core
-# Протестируйте функционал
-```
-
-#### Шаг 6: Создание Pull Request
-```bash
+git checkout -b feature/имя-функционала
 git add .
 git commit -m "Add feature: описание функционала"
 git push origin feature/имя-функционала
 ```
 
-Создайте Pull Request на GitHub: https://github.com/oepink80/pink80-core/compare
+Создайте Pull Request: https://github.com/oepink80/pink80-core/compare
 
-#### Шаг 7: После слияния PR
-1. Обновите версию в основном репозитории
-2. Обновите проект: `cd local && composer update pink80/core`
-3. Удалите дубликаты из `project.core`
-4. Проверьте конфликты: `php local/modules/pink80.core/bin/conflict-detector.php`
-
-#### Шаг 8: Commit изменений в проекте
+#### Шаг 5: После слияния PR
+1. Обновите модуль в проекте:
+```bash
+cd local
+composer update pink80/core
+```
+2. Удалите дубликаты из `project.core`
+3. Проверьте конфликты:
+```bash
+php local/modules/pink80.core/bin/conflict-detector.php
+```
+4. Commit изменений в проекте:
 ```bash
 git add local/modules/project.core
 git commit -m "Remove duplicated code, now in pink80.core"
 git push
 ```
 
-**Важно:** Не переносите проект-специфичный код (business logic) в общий модуль. Переносите только универсальные утилиты, хелперы и обработчики.
+**Важно:** Переносите только универсальные утилиты, хелперы и обработчики. Не переносите проект-специфичный код (business logic).
 
 ## Обновление
 
