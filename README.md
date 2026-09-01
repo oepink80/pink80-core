@@ -192,6 +192,42 @@ composer require pink80/core
 }
 ```
 
+### Создание project.core
+
+Для проект-специфичных изменений создайте модуль `project.core`:
+
+```bash
+mkdir -p local/modules/project.core/lib
+```
+
+Создайте файл `local/modules/project.core/include.php`:
+
+```php
+<?php
+
+namespace Project\Core;
+
+class ProjectCore extends \Pink80\Core\LocalCore
+{
+    const MODULE_ID = 'project.core';
+    
+    public static function init()
+    {
+        parent::init();
+        self::registerProjectHandlers();
+    }
+    
+    private static function registerProjectHandlers()
+    {
+        // Проект-специфичные обработчики
+    }
+}
+
+ProjectCore::registerAutoload();
+```
+
+Папка `local/modules/project.core/` попадает в git и содержит только проектный код.
+
 ### Ручная установка
 Если composer не используется:
 1. Скопируйте папку `pink80.core` в `local/modules/`
