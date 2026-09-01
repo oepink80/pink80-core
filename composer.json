@@ -3,7 +3,7 @@
     "description": "Local core for simplified Bitrix development. Includes helpers, factories, event handlers and CLI commands.",
     "type": "bitrix-module",
     "license": "MIT",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "authors": [
         {
             "name": "Pink80",

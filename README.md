@@ -45,18 +45,75 @@ composer require pink80/core
 2. Настраивается автозагрузка через composer
 3. Модуль готов к использованию
 
+**Важно для существующих проектов:**
+- Если папка `local/modules/pink80.core` уже существует → composer перезапишет её
+- Если файл `local/php_interface/init.php` уже существует → нужно добавить загрузку модуля вручную
+- Рекомендуется проверить существующий `init.php` и добавить загрузку модуля
+
 #### Обновление:
 ```bash
 composer update pink80/core
 ```
 
+### Установка в существующий проект
+
+Если проект уже имеет структуру `local/` и файл `init.php`:
+
+#### 1. Проверьте существующий init.php
+```bash
+# Проверьте, существует ли файл
+cat local/php_interface/init.php
+```
+
+#### 2. Добавьте загрузку модуля
+Вставьте этот код в начало или конец существующего `local/php_interface/init.php`:
+
+```php
+// Pink80 Core Module
+$corePath = $_SERVER['DOCUMENT_ROOT'] . '/local/modules/pink80.core/include.php';
+if (file_exists($corePath)) {
+    require_once $corePath;
+    if (class_exists('Pink80\Core\LocalCore')) {
+        \Pink80\Core\LocalCore::init();
+    }
+}
+```
+
+#### 3. Установите модуль через composer
+```bash
+composer require pink80/core
+```
+
+#### 4. Проверьте конфликты
+```bash
+php local/modules/pink80.core/bin/conflict-detector.php
+```
+
+#### 5. Если существует project.core
+Убедитесь, что нет дубликатов классов между `pink80.core` и `project.core`.
+
 ### Ручная установка
 Если composer не используется:
 1. Скопируйте папку `pink80.core` в `local/modules/`
-2. Добавьте в `local/php_interface/init.php`:
+2. Настройте автозагрузку:
+
+**Если файл `local/php_interface/init.php` уже существует:**
 ```php
+// Добавьте в начало или конец существующего файла
 require_once $_SERVER['DOCUMENT_ROOT'] . '/local/modules/pink80.core/include.php';
-\Pink80\Core\LocalCore::init();
+if (class_exists('Pink80\Core\LocalCore')) {
+    \Pink80\Core\LocalCore::init();
+}
+```
+
+**Если файл `local/php_interface/init.php` не существует:**
+Создайте файл `local/php_interface/init.php`:
+```php
+<?php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/local/modules/pink80.core/include.php';
+if (class_exists('Pink80\Core\LocalCore')) {
+    \Pink80\Core\LocalCore::init();
+}
 ```
 
 ### Установка через админку (опционально)
