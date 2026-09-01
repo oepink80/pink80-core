@@ -442,8 +442,9 @@ php local/modules/pink80.core/bin/conflict-detector.php
 
 #### Шаг 2: Форк и клонирование (один раз)
 1. Форкните репозиторий: https://github.com/oepink80/pink80-core/fork
-2. Клонируйте свой форк:
+2. Клонируйте свой форк в любую рабочую папку (например, `C:\temp\` или `~/work/`):
 ```bash
+cd C:\temp  # или любая другая рабочая папка
 git clone git@github.com:YOUR_USERNAME/pink80-core.git
 cd pink80-core
 ```
