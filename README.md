@@ -33,8 +33,8 @@ cd local
     },
     "autoload": {
         "psr-4": {
-            "Pink80\\Core\\": "pink80.core/lib/",
-            "Project\\Core\\": "project.core/lib/"
+            "Pink80\\Core\\": "modules/pink80.core/lib/",
+            "Project\\Core\\": "modules/project.core/lib/"
         }
     },
     "extra": {
@@ -108,6 +108,12 @@ ProjectCore::registerAutoload();
  * Файл автозагрузки модулей
  * Подключается автоматически при загрузке Битрикс
  */
+
+// Подключение composer autoload
+$composerAutoload = $_SERVER['DOCUMENT_ROOT'] . '/local/vendor/autoload.php';
+if (file_exists($composerAutoload)) {
+    require_once $composerAutoload;
+}
 
 // Подключение основного модуля pink80.core
 $corePath = $_SERVER['DOCUMENT_ROOT'] . '/local/modules/pink80.core/include.php';
@@ -360,6 +366,17 @@ private static function registerProjectHandlers()
 {
     \Pink80\Core\Console\CommandRegistry::register('Project\Core\Console\Commands\MyCommand');
 }
+```
+
+После создания команды перегенерируйте autoload:
+```bash
+cd local
+composer dump-autoload
+```
+
+Запустите команду:
+```bash
+php -d mbstring.func_overload=2 local/modules/pink80.core/bin/console my-command
 ```
 
 ### Конфликт detector
