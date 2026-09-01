@@ -6,14 +6,45 @@
 
 ## Установка
 
+### Требования
+- PHP >= 7.4
+- Composer (установленный глобально или локально)
+- Битрикс (любая версия с поддержкой D7)
+
 ### Установка через Composer
 Модуль распространяется исключительно через composer для легкого обновления и переиспользования в разных проектах.
 
-#### В composer.json проекта:
+#### Шаг 1: Создание composer.json (если не существует)
+
+Для чистого проекта без composer.json:
+
+```bash
+cd /path/to/your/bitrix/project
+composer init
+```
+
+Если composer не установлен, установите его:
+```bash
+# Windows
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php composer-setup.php
+php composer.phar
+
+# Linux/Mac
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+```
+
+Затем отредактируйте созданный composer.json:
+
 ```json
 {
+    "name": "your-company/your-project",
+    "description": "Your Bitrix project",
+    "type": "project",
     "require": {
-        "pink80/core": "^1.0"
+        "php": ">=7.4",
+        "pink80/core": "^2.0"
     },
     "repositories": [
         {
@@ -21,6 +52,12 @@
             "url": "git@github.com:oepink80/pink80-core.git"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "Pink80\\Core\\": "local/modules/pink80.core/lib/",
+            "Project\\Core\\": "local/modules/project.core/lib/"
+        }
+    },
     "extra": {
         "installer-paths": {
             "local/modules/pink80.core": ["type:bitrix-module"]
@@ -30,6 +67,8 @@
         "composer/installers": "^2.0"
     },
     "config": {
+        "optimize-autoloader": true,
+        "classmap-authoritative": false,
         "allow-plugins": {
             "composer/installers": true
         }
@@ -37,7 +76,7 @@
 }
 ```
 
-### Установка:
+#### Шаг 2: Установка модуля
 ```bash
 composer require pink80/core
 ```
@@ -46,6 +85,39 @@ composer require pink80/core
 1. Модуль устанавливается напрямую в `local/modules/pink80.core`
 2. Настраивается автозагрузка через composer
 3. Модуль готов к использованию
+
+#### Шаг 3: Создание init.php (если не существует)
+
+Для чистого проекта без `local/php_interface/init.php`:
+
+Создайте файл `local/php_interface/init.php`:
+
+```php
+<?php
+
+/**
+ * Файл автозагрузки модулей
+ * Подключается автоматически при загрузке Битрикс
+ */
+
+// Подключение основного модуля pink80.core
+$corePath = $_SERVER['DOCUMENT_ROOT'] . '/local/modules/pink80.core/include.php';
+if (file_exists($corePath)) {
+    require_once $corePath;
+    if (class_exists('Pink80\Core\LocalCore')) {
+        \Pink80\Core\LocalCore::init();
+    }
+}
+
+// Подключение проектного модуля project.core (если создан)
+$projectPath = $_SERVER['DOCUMENT_ROOT'] . '/local/modules/project.core/include.php';
+if (file_exists($projectPath)) {
+    require_once $projectPath;
+    if (class_exists('Project\Core\ProjectCore')) {
+        \Project\Core\ProjectCore::init();
+    }
+}
+```
 
 **Важно для существующих проектов:**
 - Если папка `local/modules/pink80.core` уже существует → composer перезапишет её
