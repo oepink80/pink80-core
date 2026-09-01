@@ -15,7 +15,7 @@ namespace Pink80\Core;
 class LocalCore
 {
     const MODULE_ID = 'pink80.core';
-    const MODULE_VERSION = '1.0.0';
+    const MODULE_VERSION = '1.0.0'; // Версия из composer.json
     
     /**
      * Путь к модулю
