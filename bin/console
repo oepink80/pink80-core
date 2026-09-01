@@ -8,7 +8,7 @@
  */
 
 // Подключение Битрикс
-$_SERVER['DOCUMENT_ROOT'] = dirname(__DIR__, 3);
+$_SERVER['DOCUMENT_ROOT'] = dirname(__DIR__, 4);
 $DOCUMENT_ROOT = $_SERVER['DOCUMENT_ROOT'];
 
 define('NO_KEEP_STATISTIC', true);
@@ -16,10 +16,25 @@ define('NOT_CHECK_PERMISSIONS', true);
 define('BX_CRONTAB', true);
 define('BX_NO_ACCELERATOR_RESET', true);
 
+// Подключение composer autoload ДО Битрикс
+$composerAutoload = $_SERVER['DOCUMENT_ROOT'] . '/local/vendor/autoload.php';
+if (file_exists($composerAutoload)) {
+    require_once $composerAutoload;
+}
+
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_before.php';
 
 // Подключение модуля
 require_once __DIR__ . '/../include.php';
+
+// Подключение project.core если существует
+$projectCorePath = $_SERVER['DOCUMENT_ROOT'] . '/local/modules/project.core/include.php';
+if (file_exists($projectCorePath)) {
+    require_once $projectCorePath;
+    if (class_exists('Project\Core\ProjectCore')) {
+        \Project\Core\ProjectCore::init();
+    }
+}
 
 use Pink80\Core\Console\ConsoleApplication;
 

@@ -3,12 +3,11 @@
 namespace Pink80\Core\Factories;
 
 use Pink80\Core\Interfaces\FactoryInterface;
-use Pink80\Core\Helpers\BaseHelper;
 
 /**
  * Базовый абстрактный класс для фабрик
  */
-abstract class BaseFactory extends BaseHelper implements FactoryInterface
+abstract class BaseFactory implements FactoryInterface
 {
     /**
      * Получить имя сущности ORM

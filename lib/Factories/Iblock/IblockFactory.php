@@ -2,29 +2,48 @@
 
 namespace Pink80\Core\Factories\Iblock;
 
-use Pink80\Core\Factories\BaseFactory;
-use Bitrix\Iblock\IblockTable;
-use Bitrix\Iblock\ElementTable;
-
 /**
- * Фабрика для работы с инфоблоками (D7 подход)
+ * Фабрика для работы с инфоблоками (использует старый API)
  */
-class IblockFactory extends BaseFactory
+class IblockFactory
 {
     /**
-     * Получить имя сущности ORM
+     * Загрузка модуля
      */
-    protected static function getEntityClass()
+    protected static function loadModule()
     {
-        return IblockTable::class;
+        if (!\CModule::IncludeModule('iblock')) {
+            throw new \Exception('Модуль инфоблоков не установлен');
+        }
     }
     
     /**
-     * Получить модуль для загрузки
+     * Создать тип инфоблока
      */
-    protected static function getModuleId()
+    public static function createIblockType(array $data)
     {
-        return 'iblock';
+        static::loadModule();
+        
+        $iblockType = new \CIBlockType();
+        
+        // Установка обязательных полей
+        if (!isset($data['ID'])) {
+            throw new \Exception('ID обязателен для создания типа инфоблока');
+        }
+        
+        if (!isset($data['SECTIONS']) || !isset($data['IN_RSS']) || !isset($data['SORT'])) {
+            $data['SECTIONS'] = 'Y';
+            $data['IN_RSS'] = 'N';
+            $data['SORT'] = 100;
+        }
+        
+        $result = $iblockType->Add($data);
+        
+        if (!$result) {
+            throw new \Exception($iblockType->LAST_ERROR);
+        }
+        
+        return $result;
     }
     
     /**
@@ -34,7 +53,7 @@ class IblockFactory extends BaseFactory
     {
         static::loadModule();
         
-        $iblock = new IblockTable();
+        $iblock = new \CIBlock();
         
         // Установка обязательных полей
         if (!isset($data['IBLOCK_TYPE_ID'])) {
@@ -53,17 +72,13 @@ class IblockFactory extends BaseFactory
             throw new \Exception('NAME обязателен для создания инфоблока');
         }
         
-        foreach ($data as $field => $value) {
-            $iblock->set($field, $value);
+        $iblockId = $iblock->Add($data);
+        
+        if (!$iblockId) {
+            throw new \Exception($iblock->LAST_ERROR);
         }
         
-        $result = $iblock->save();
-        
-        if (!$result->isSuccess()) {
-            throw new \Exception(implode(', ', $result->getErrorMessages()));
-        }
-        
-        return $iblock;
+        return self::getById($iblockId);
     }
     
     /**
@@ -105,10 +120,19 @@ class IblockFactory extends BaseFactory
     {
         static::loadModule();
         
-        return IblockTable::getList([
-            'filter' => ['CODE' => $code],
-            'limit' => 1
-        ])->fetchObject();
+        $iblock = \CIBlock::GetList([], ['CODE' => $code])->Fetch();
+        return $iblock ?: null;
+    }
+    
+    /**
+     * Получить инфоблок по ID
+     */
+    public static function getById($id)
+    {
+        static::loadModule();
+        
+        $iblock = \CIBlock::GetByID($id)->Fetch();
+        return $iblock ?: null;
     }
     
     /**
