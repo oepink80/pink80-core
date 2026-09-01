@@ -374,90 +374,60 @@ php local/modules/pink80.core/bin/conflict-detector.php
 
 ## Модификация модуля
 
-### Структура модуля
+### Вариант 1: Временные изменения (рекомендуется)
 
-```
-local/modules/pink80.core/
-├── bin/                    # CLI команды
-│   ├── console            # Точка входа для консольных команд
-│   └── conflict-detector.php # Детектор конфликтов классов
-├── handlers/               # Регистрация обработчиков событий
-│   └── EventHandlerRegistrar.php
-├── lib/                    # Основные классы
-│   ├── Console/           # CLI система
-│   │   ├── Commands/      # Консольные команды
-│   │   ├── ConsoleApplication.php
-│   │   ├── CommandRegistry.php
-│   │   └── BaseCommand.php
-│   ├── Factories/         # Фабрики сущностей
-│   │   ├── Iblock/
-│   │   ├── User/
-│   │   ├── Highloadblock/
-│   │   └── Main/
-│   ├── Handlers/          # Обработчики событий
-│   │   ├── Main/
-│   │   ├── Iblock/
-│   │   ├── User/
-│   │   └── Highloadblock/
-│   ├── Helpers/           # Хелперы
-│   │   ├── Iblock/
-│   │   ├── User/
-│   │   ├── String/
-│   │   ├── Array/
-│   │   ├── Date/
-│   │   └── Highloadblock/
-│   └── Interfaces/        # Интерфейсы
-├── composer.json          # Composer конфигурация
-├── README.md              # Документация
-└── include.php            # Основной файл модуля
-```
-
-### Добавление новой функциональности
-
-#### Вариант 1: Временные изменения (рекомендуется)
 Используйте `project.core` для быстрых изменений:
 - Создайте класс в `local/modules/project.core/lib/`
 - Протестируйте в проекте
-- Если функционал универсальный → перенесите в pink80.core (см. ниже)
+- Если функционал универсальный → перенесите в pink80.core (см. Promotion workflow ниже)
 
-#### Вариант 2: Постоянные изменения в pink80.core
+**Преимущества:**
+- ✅ Изменения не потеряются при обновлении pink80.core
+- ✅ Легко отменить
+- ✅ Изолировано от общего модуля
 
-Для постоянных изменений в основном модуле:
+### Вариант 2: Прямое редактирование pink80.core (с ограничениями)
 
-1. Клонируйте репозиторий модуля:
+Можно редактировать файлы напрямую в `local/modules/pink80.core/`:
+
+**⚠️ ВАЖНО:** При следующем `composer update pink80/core` все изменения будут перезаписаны!
+
+Используйте этот вариант только если:
+- Вы понимаете, что изменения потеряются при обновлении
+- Вы хотите временно протестировать изменение в самом модуле
+- Вы планируете сразу сделать PR в основной репозиторий
+
+### Вариант 3: Постоянные изменения через Pull Request
+
+Если функционал универсальный и нужен в других проектах:
+
+1. Форкните репозиторий: https://github.com/oepink80/pink80-core/fork
+2. Клонируйте свой форк:
 ```bash
-cd /path/to/work/
-git clone git@github.com:oepink80/pink80-core.git
+git clone git@github.com:YOUR_USERNAME/pink80-core.git
 cd pink80-core
 ```
 
-2. Внесите изменения (добавьте хелпер, фабрику и т.д.)
-
-3. Увеличьте версию в `composer.json`:
-```json
-{
-    "version": "2.1.0"
-}
+3. Создайте ветку для изменений:
+```bash
+git checkout -b feature/имя-функционала
 ```
 
-4. Запушьте изменения:
+4. Внесите изменения
+
+5. Запушьте в свой форк:
 ```bash
 git add .
 git commit -m "Add feature: описание изменений"
-git push origin master
-git tag v2.1.0
-git push origin master --tags
+git push origin feature/имя-функционала
 ```
 
-5. Обновите в проекте:
+6. Создайте Pull Request: https://github.com/oepink80/pink80-core/compare
+
+7. После слияния PR обновите модуль в проекте:
 ```bash
 cd local
 composer update pink80/core
-```
-
-6. Проверьте конфликты:
-```bash
-php local/modules/pink80.core/bin/conflict-detector.php
 ```
 
 ### Promotion workflow: Перенос функционала из project.core в pink80.core
